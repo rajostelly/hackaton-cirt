@@ -1,0 +1,465 @@
+﻿{
+    "openapi":  "3.1.0",
+    "info":  {
+                 "title":  "ARO API",
+                 "description":  "Plateforme de supervision de sÃ©curitÃ© pilotÃ©e par IA",
+                 "version":  "0.1.0"
+             },
+    "paths":  {
+                  "/alerts":  {
+                                  "get":  {
+                                              "tags":  [
+                                                           "alerts"
+                                                       ],
+                                              "summary":  "List Open Alerts",
+                                              "operationId":  "list_open_alerts_alerts_get",
+                                              "parameters":  [
+                                                                 {
+                                                                     "name":  "limit",
+                                                                     "in":  "query",
+                                                                     "required":  false,
+                                                                     "schema":  {
+                                                                                    "type":  "integer",
+                                                                                    "default":  50,
+                                                                                    "title":  "Limit"
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "name":  "criticity",
+                                                                     "in":  "query",
+                                                                     "required":  false,
+                                                                     "schema":  {
+                                                                                    "anyOf":  [
+                                                                                                  {
+                                                                                                      "$ref":  "#/components/schemas/Criticity"
+                                                                                                  },
+                                                                                                  {
+                                                                                                      "type":  "null"
+                                                                                                  }
+                                                                                              ],
+                                                                                    "title":  "Criticity"
+                                                                                }
+                                                                 }
+                                                             ],
+                                              "responses":  {
+                                                                "200":  {
+                                                                            "description":  "Successful Response",
+                                                                            "content":  {
+                                                                                            "application/json":  {
+                                                                                                                     "schema":  {
+                                                                                                                                    "type":  "array",
+                                                                                                                                    "items":  {
+                                                                                                                                                  "$ref":  "#/components/schemas/AlertOut"
+                                                                                                                                              },
+                                                                                                                                    "title":  "Response List Open Alerts Alerts Get"
+                                                                                                                                }
+                                                                                                                 }
+                                                                                        }
+                                                                        },
+                                                                "422":  {
+                                                                            "description":  "Validation Error",
+                                                                            "content":  {
+                                                                                            "application/json":  {
+                                                                                                                     "schema":  {
+                                                                                                                                    "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                }
+                                                                                                                 }
+                                                                                        }
+                                                                        }
+                                                            }
+                                          },
+                                  "post":  {
+                                               "tags":  [
+                                                            "alerts"
+                                                        ],
+                                               "summary":  "Ingest Alert",
+                                               "operationId":  "ingest_alert_alerts_post",
+                                               "requestBody":  {
+                                                                   "required":  true,
+                                                                   "content":  {
+                                                                                   "application/json":  {
+                                                                                                            "schema":  {
+                                                                                                                           "$ref":  "#/components/schemas/AlertIn"
+                                                                                                                       }
+                                                                                                        }
+                                                                               }
+                                                               },
+                                               "responses":  {
+                                                                 "201":  {
+                                                                             "description":  "Successful Response",
+                                                                             "content":  {
+                                                                                             "application/json":  {
+                                                                                                                      "schema":  {
+                                                                                                                                     "$ref":  "#/components/schemas/AlertOut"
+                                                                                                                                 }
+                                                                                                                  }
+                                                                                         }
+                                                                         },
+                                                                 "422":  {
+                                                                             "description":  "Validation Error",
+                                                                             "content":  {
+                                                                                             "application/json":  {
+                                                                                                                      "schema":  {
+                                                                                                                                     "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                 }
+                                                                                                                  }
+                                                                                         }
+                                                                         }
+                                                             }
+                                           }
+                              },
+                  "/alerts/{alert_id}":  {
+                                             "get":  {
+                                                         "tags":  [
+                                                                      "alerts"
+                                                                  ],
+                                                         "summary":  "Get Alert",
+                                                         "operationId":  "get_alert_alerts__alert_id__get",
+                                                         "parameters":  [
+                                                                            {
+                                                                                "name":  "alert_id",
+                                                                                "in":  "path",
+                                                                                "required":  true,
+                                                                                "schema":  {
+                                                                                               "type":  "string",
+                                                                                               "title":  "Alert Id"
+                                                                                           }
+                                                                            }
+                                                                        ],
+                                                         "responses":  {
+                                                                           "200":  {
+                                                                                       "description":  "Successful Response",
+                                                                                       "content":  {
+                                                                                                       "application/json":  {
+                                                                                                                                "schema":  {
+                                                                                                                                               "$ref":  "#/components/schemas/AlertOut"
+                                                                                                                                           }
+                                                                                                                            }
+                                                                                                   }
+                                                                                   },
+                                                                           "422":  {
+                                                                                       "description":  "Validation Error",
+                                                                                       "content":  {
+                                                                                                       "application/json":  {
+                                                                                                                                "schema":  {
+                                                                                                                                               "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                           }
+                                                                                                                            }
+                                                                                                   }
+                                                                                   }
+                                                                       }
+                                                     }
+                                         },
+                  "/alerts/{alert_id}/triage":  {
+                                                    "post":  {
+                                                                 "tags":  [
+                                                                              "alerts"
+                                                                          ],
+                                                                 "summary":  "Triage Alert",
+                                                                 "operationId":  "triage_alert_alerts__alert_id__triage_post",
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "name":  "alert_id",
+                                                                                        "in":  "path",
+                                                                                        "required":  true,
+                                                                                        "schema":  {
+                                                                                                       "type":  "string",
+                                                                                                       "title":  "Alert Id"
+                                                                                                   }
+                                                                                    }
+                                                                                ],
+                                                                 "requestBody":  {
+                                                                                     "required":  true,
+                                                                                     "content":  {
+                                                                                                     "application/json":  {
+                                                                                                                              "schema":  {
+                                                                                                                                             "$ref":  "#/components/schemas/TriageIn"
+                                                                                                                                         }
+                                                                                                                          }
+                                                                                                 }
+                                                                                 },
+                                                                 "responses":  {
+                                                                                   "200":  {
+                                                                                               "description":  "Successful Response",
+                                                                                               "content":  {
+                                                                                                               "application/json":  {
+                                                                                                                                        "schema":  {
+                                                                                                                                                       "$ref":  "#/components/schemas/AlertOut"
+                                                                                                                                                   }
+                                                                                                                                    }
+                                                                                                           }
+                                                                                           },
+                                                                                   "422":  {
+                                                                                               "description":  "Validation Error",
+                                                                                               "content":  {
+                                                                                                               "application/json":  {
+                                                                                                                                        "schema":  {
+                                                                                                                                                       "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                                   }
+                                                                                                                                    }
+                                                                                                           }
+                                                                                           }
+                                                                               }
+                                                             }
+                                                },
+                  "/health":  {
+                                  "get":  {
+                                              "tags":  [
+                                                           "health"
+                                                       ],
+                                              "summary":  "Health Check",
+                                              "operationId":  "health_check_health_get",
+                                              "responses":  {
+                                                                "200":  {
+                                                                            "description":  "Successful Response",
+                                                                            "content":  {
+                                                                                            "application/json":  {
+                                                                                                                     "schema":  {
+                                                                                                                                    "$ref":  "#/components/schemas/HealthResponse"
+                                                                                                                                }
+                                                                                                                 }
+                                                                                        }
+                                                                        }
+                                                            }
+                                          }
+                              }
+              },
+    "components":  {
+                       "schemas":  {
+                                       "AlertIn":  {
+                                                       "properties":  {
+                                                                          "title":  {
+                                                                                        "type":  "string",
+                                                                                        "minLength":  1,
+                                                                                        "title":  "Title"
+                                                                                    },
+                                                                          "source_ip":  {
+                                                                                            "type":  "string",
+                                                                                            "title":  "Source Ip"
+                                                                                        },
+                                                                          "destination_ip":  {
+                                                                                                 "anyOf":  [
+                                                                                                               {
+                                                                                                                   "type":  "string"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "type":  "null"
+                                                                                                               }
+                                                                                                           ],
+                                                                                                 "title":  "Destination Ip"
+                                                                                             },
+                                                                          "criticity":  {
+                                                                                            "$ref":  "#/components/schemas/Criticity"
+                                                                                        },
+                                                                          "rule_name":  {
+                                                                                            "type":  "string",
+                                                                                            "minLength":  1,
+                                                                                            "title":  "Rule Name"
+                                                                                        },
+                                                                          "raw_data":  {
+                                                                                           "anyOf":  [
+                                                                                                         {
+                                                                                                             "additionalProperties":  true,
+                                                                                                             "type":  "object"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "type":  "null"
+                                                                                                         }
+                                                                                                     ],
+                                                                                           "title":  "Raw Data"
+                                                                                       }
+                                                                      },
+                                                       "type":  "object",
+                                                       "required":  [
+                                                                        "title",
+                                                                        "source_ip",
+                                                                        "criticity",
+                                                                        "rule_name"
+                                                                    ],
+                                                       "title":  "AlertIn"
+                                                   },
+                                       "AlertOut":  {
+                                                        "properties":  {
+                                                                           "id":  {
+                                                                                      "type":  "string",
+                                                                                      "title":  "Id"
+                                                                                  },
+                                                                           "title":  {
+                                                                                         "type":  "string",
+                                                                                         "title":  "Title"
+                                                                                     },
+                                                                           "source_ip":  {
+                                                                                             "type":  "string",
+                                                                                             "title":  "Source Ip"
+                                                                                         },
+                                                                           "destination_ip":  {
+                                                                                                  "anyOf":  [
+                                                                                                                {
+                                                                                                                    "type":  "string"
+                                                                                                                },
+                                                                                                                {
+                                                                                                                    "type":  "null"
+                                                                                                                }
+                                                                                                            ],
+                                                                                                  "title":  "Destination Ip"
+                                                                                              },
+                                                                           "criticity":  {
+                                                                                             "$ref":  "#/components/schemas/Criticity"
+                                                                                         },
+                                                                           "rule_name":  {
+                                                                                             "type":  "string",
+                                                                                             "title":  "Rule Name"
+                                                                                         },
+                                                                           "status":  {
+                                                                                          "$ref":  "#/components/schemas/AlertStatus"
+                                                                                      },
+                                                                           "timestamp":  {
+                                                                                             "type":  "string",
+                                                                                             "format":  "date-time",
+                                                                                             "title":  "Timestamp"
+                                                                                         },
+                                                                           "explanation":  {
+                                                                                               "anyOf":  [
+                                                                                                             {
+                                                                                                                 "type":  "string"
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "type":  "null"
+                                                                                                             }
+                                                                                                         ],
+                                                                                               "title":  "Explanation"
+                                                                                           },
+                                                                           "is_false_positive":  {
+                                                                                                     "anyOf":  [
+                                                                                                                   {
+                                                                                                                       "type":  "boolean"
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "type":  "null"
+                                                                                                                   }
+                                                                                                               ],
+                                                                                                     "title":  "Is False Positive"
+                                                                                                 }
+                                                                       },
+                                                        "type":  "object",
+                                                        "required":  [
+                                                                         "id",
+                                                                         "title",
+                                                                         "source_ip",
+                                                                         "criticity",
+                                                                         "rule_name",
+                                                                         "status",
+                                                                         "timestamp"
+                                                                     ],
+                                                        "title":  "AlertOut"
+                                                    },
+                                       "AlertStatus":  {
+                                                           "type":  "string",
+                                                           "enum":  [
+                                                                        "open",
+                                                                        "triaged",
+                                                                        "closed"
+                                                                    ],
+                                                           "title":  "AlertStatus"
+                                                       },
+                                       "Criticity":  {
+                                                         "type":  "string",
+                                                         "enum":  [
+                                                                      "low",
+                                                                      "medium",
+                                                                      "high",
+                                                                      "critical"
+                                                                  ],
+                                                         "title":  "Criticity"
+                                                     },
+                                       "HTTPValidationError":  {
+                                                                   "properties":  {
+                                                                                      "detail":  {
+                                                                                                     "items":  {
+                                                                                                                   "$ref":  "#/components/schemas/ValidationError"
+                                                                                                               },
+                                                                                                     "type":  "array",
+                                                                                                     "title":  "Detail"
+                                                                                                 }
+                                                                                  },
+                                                                   "type":  "object",
+                                                                   "title":  "HTTPValidationError"
+                                                               },
+                                       "HealthResponse":  {
+                                                              "properties":  {
+                                                                                 "status":  {
+                                                                                                "type":  "string",
+                                                                                                "title":  "Status",
+                                                                                                "default":  "ok"
+                                                                                            }
+                                                                             },
+                                                              "type":  "object",
+                                                              "title":  "HealthResponse"
+                                                          },
+                                       "TriageIn":  {
+                                                        "properties":  {
+                                                                           "is_false_positive":  {
+                                                                                                     "type":  "boolean",
+                                                                                                     "title":  "Is False Positive"
+                                                                                                 },
+                                                                           "analyst_note":  {
+                                                                                                "anyOf":  [
+                                                                                                              {
+                                                                                                                  "type":  "string"
+                                                                                                              },
+                                                                                                              {
+                                                                                                                  "type":  "null"
+                                                                                                              }
+                                                                                                          ],
+                                                                                                "title":  "Analyst Note"
+                                                                                            }
+                                                                       },
+                                                        "type":  "object",
+                                                        "required":  [
+                                                                         "is_false_positive"
+                                                                     ],
+                                                        "title":  "TriageIn"
+                                                    },
+                                       "ValidationError":  {
+                                                               "properties":  {
+                                                                                  "loc":  {
+                                                                                              "items":  {
+                                                                                                            "anyOf":  [
+                                                                                                                          {
+                                                                                                                              "type":  "string"
+                                                                                                                          },
+                                                                                                                          {
+                                                                                                                              "type":  "integer"
+                                                                                                                          }
+                                                                                                                      ]
+                                                                                                        },
+                                                                                              "type":  "array",
+                                                                                              "title":  "Location"
+                                                                                          },
+                                                                                  "msg":  {
+                                                                                              "type":  "string",
+                                                                                              "title":  "Message"
+                                                                                          },
+                                                                                  "type":  {
+                                                                                               "type":  "string",
+                                                                                               "title":  "Error Type"
+                                                                                           },
+                                                                                  "input":  {
+                                                                                                "title":  "Input"
+                                                                                            },
+                                                                                  "ctx":  {
+                                                                                              "type":  "object",
+                                                                                              "title":  "Context"
+                                                                                          }
+                                                                              },
+                                                               "type":  "object",
+                                                               "required":  [
+                                                                                "loc",
+                                                                                "msg",
+                                                                                "type"
+                                                                            ],
+                                                               "title":  "ValidationError"
+                                                           }
+                                   }
+                   }
+}

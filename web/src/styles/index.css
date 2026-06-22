@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@theme {
+  --color-criticity-critical: #a32d2d;
+  --color-criticity-high: #ba7517;
+  --color-criticity-medium: #856d16;
+  --color-criticity-low: #1a5f8a;
+  --color-surface: #0f1115;
+  --color-surface-alt: #161b22;
+  --font-sans: "Inter", system-ui, sans-serif;
+}

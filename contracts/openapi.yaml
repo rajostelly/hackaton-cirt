@@ -1,0 +1,344 @@
+openapi: "3.1.0"
+info:
+  title: ARO API
+  description: Plateforme de supervision de sécurité pilotée par IA
+  version: "0.1.0"
+servers:
+  - url: http://localhost:8000
+    description: Développement local
+
+paths:
+  /health:
+    get:
+      operationId: health_check
+      summary: Vérification de santé
+      tags: [health]
+      responses:
+        "200":
+          description: Service opérationnel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /alerts:
+    get:
+      operationId: list_open_alerts
+      summary: Lister les alertes ouvertes
+      tags: [alerts]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 500
+        - name: criticity
+          in: query
+          schema:
+            $ref: "#/components/schemas/Criticity"
+      responses:
+        "200":
+          description: Liste des alertes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlertOut"
+
+    post:
+      operationId: ingest_alert
+      summary: Ingérer une nouvelle alerte
+      tags: [alerts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertIn"
+      responses:
+        "201":
+          description: Alerte créée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertOut"
+        "422":
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /alerts/{alert_id}:
+    get:
+      operationId: get_alert
+      summary: Détail d'une alerte
+      tags: [alerts]
+      parameters:
+        - name: alert_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Détail de l'alerte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertOut"
+        "404":
+          description: Alerte non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /alerts/{alert_id}/enrich:
+    get:
+      operationId: enrich_alert
+      summary: Enrichir une alerte avec VirusTotal (réputation IP source)
+      tags: [enrich]
+      parameters:
+        - name: alert_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Rapport de menace VirusTotal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreatReport"
+        "404":
+          description: Alerte non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /wazuh/agents:
+    get:
+      operationId: list_wazuh_agents
+      summary: Lister les agents Wazuh actifs
+      tags: [wazuh]
+      responses:
+        "200":
+          description: Liste des agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WazuhAgent"
+
+  /wazuh/alerts:
+    get:
+      operationId: get_wazuh_alerts
+      summary: Récupérer les alertes récentes depuis Wazuh Indexer
+      tags: [wazuh]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 500
+      responses:
+        "200":
+          description: Liste des alertes Wazuh
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WazuhAlert"
+
+  /alerts/{alert_id}/triage:
+    post:
+      operationId: triage_alert
+      summary: Triager une alerte
+      tags: [alerts]
+      parameters:
+        - name: alert_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TriageIn"
+      responses:
+        "200":
+          description: Alerte triée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertOut"
+        "404":
+          description: Alerte non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    Criticity:
+      type: string
+      enum: [low, medium, high, critical]
+
+    AlertStatus:
+      type: string
+      enum: [open, triaged, closed]
+
+    AlertIn:
+      type: object
+      required: [title, source_ip, criticity, rule_name]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        source_ip:
+          type: string
+          pattern: "^(\\d{1,3}\\.){3}\\d{1,3}$"
+        destination_ip:
+          type: string
+          pattern: "^(\\d{1,3}\\.){3}\\d{1,3}$"
+          nullable: true
+        criticity:
+          $ref: "#/components/schemas/Criticity"
+        rule_name:
+          type: string
+          minLength: 1
+        raw_data:
+          type: object
+          additionalProperties: true
+          nullable: true
+
+    AlertOut:
+      type: object
+      required: [id, title, source_ip, criticity, rule_name, status, timestamp]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        source_ip:
+          type: string
+        destination_ip:
+          type: string
+          nullable: true
+        criticity:
+          $ref: "#/components/schemas/Criticity"
+        rule_name:
+          type: string
+        status:
+          $ref: "#/components/schemas/AlertStatus"
+        timestamp:
+          type: string
+          format: date-time
+        explanation:
+          type: string
+          nullable: true
+        is_false_positive:
+          type: boolean
+          nullable: true
+
+    TriageIn:
+      type: object
+      required: [is_false_positive]
+      properties:
+        is_false_positive:
+          type: boolean
+        analyst_note:
+          type: string
+          nullable: true
+
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+
+    ThreatReport:
+      type: object
+      required: [ip, malicious_count, suspicious_count, harmless_count, total_engines, is_malicious, threat_score]
+      properties:
+        ip:
+          type: string
+        malicious_count:
+          type: integer
+        suspicious_count:
+          type: integer
+        harmless_count:
+          type: integer
+        total_engines:
+          type: integer
+        is_malicious:
+          type: boolean
+        threat_score:
+          type: number
+          format: float
+
+    WazuhAgent:
+      type: object
+      required: [id, name, ip, status]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        ip:
+          type: string
+        status:
+          type: string
+        os_name:
+          type: string
+          nullable: true
+
+    WazuhAlert:
+      type: object
+      required: [id, rule_id, rule_description, rule_level, agent_name, timestamp]
+      properties:
+        id:
+          type: string
+        rule_id:
+          type: string
+        rule_description:
+          type: string
+        rule_level:
+          type: integer
+        agent_name:
+          type: string
+        source_ip:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+        full_log:
+          type: string
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          type: string
