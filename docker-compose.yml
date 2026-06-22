@@ -30,6 +30,26 @@ services:
     depends_on:
       - api
 
+  # ── ARO Sensor (détecteur de scan nmap, temps réel) ──────────────────────
+  # Utilise le réseau de l'hôte + CAP_NET_RAW pour sniffer le trafic réel
+  # arrivant sur le serveur, et POST les détections à l'API.
+  sensor:
+    build:
+      context: ./sensor
+      dockerfile: Dockerfile
+    network_mode: host
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    environment:
+      ARO_API_URL: http://localhost:8000
+      SENSOR_TARGET: sfyrisec.duckdns.org
+      SCAN_PORT_THRESHOLD: "10"
+      SCAN_WINDOW_SECONDS: "10"
+    restart: unless-stopped
+    depends_on:
+      - api
+
   # ── Wazuh Manager ────────────────────────────────────────────────────────
   wazuh.manager:
     image: wazuh/wazuh-manager:4.9.2

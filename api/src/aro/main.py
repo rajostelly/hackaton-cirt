@@ -5,8 +5,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from aro.interfaces.http.dependencies import get_broker
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()  # charge api/.env si présent (DATABASE_URL, clés, etc.)
+except ImportError:  # python-dotenv optionnel
+    pass
+
+from aro.interfaces.http.dependencies import get_broker, get_repository
 from aro.interfaces.http.errors import register_error_handlers
+from aro.interfaces.http.middleware import NmapHttpProbeMiddleware
 from aro.interfaces.http.routers.alerts import router as alerts_router
 from aro.interfaces.http.routers.crowdstrike import router as crowdstrike_router
 from aro.interfaces.http.routers.detections import router as detections_router
@@ -23,6 +31,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Lie le broker temps réel à la boucle asyncio courante pour permettre la
     # publication d'événements depuis les routes synchrones (threadpool).
     get_broker().bind_loop(asyncio.get_running_loop())
+    # Initialise le repository (crée les tables si DATABASE_URL est défini).
+    get_repository()
     yield
 
 
@@ -40,6 +50,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Détection des sondes HTTP nmap (User-Agent NSE) sur toutes les requêtes.
+app.add_middleware(NmapHttpProbeMiddleware)
 
 register_error_handlers(app)
 app.include_router(alerts_router)

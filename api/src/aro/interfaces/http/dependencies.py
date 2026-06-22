@@ -41,12 +41,33 @@ from aro.infrastructure.integration.wazuh_manager_client import WazuhManagerClie
 # Alerting singletons
 # ---------------------------------------------------------------------------
 
-_repository: AlertRepository = InMemoryAlertRepository()
+_repository: AlertRepository | None = None
 _broker = AlertBroker()
 
 
 def get_repository() -> AlertRepository:
+    """Repository d'alertes (singleton, choisi selon l'environnement).
+
+    Avec `DATABASE_URL` (ex. Postgres), persistance SQLAlchemy ; sinon, dépôt
+    en mémoire (tests, démo locale sans base).
+    """
+    global _repository
+    if _repository is None:
+        database_url = os.environ.get("DATABASE_URL")
+        if database_url:
+            from aro.infrastructure.alerting.session_repo import SessionScopedAlertRepository
+            from aro.infrastructure.persistence.database import init_db
+
+            _repository = SessionScopedAlertRepository(init_db(database_url))
+        else:
+            _repository = InMemoryAlertRepository()
     return _repository
+
+
+def reset_repository() -> None:
+    """Réinitialise le singleton (tests)."""
+    global _repository
+    _repository = None
 
 
 def get_broker() -> AlertBroker:

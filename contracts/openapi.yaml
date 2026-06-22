@@ -194,6 +194,52 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /detections/scan:
+    post:
+      operationId: report_scan
+      summary: Signaler un balayage réseau détecté (capteur nmap)
+      description: >
+        Point d'entrée du capteur de scan. Transforme un balayage de ports/HTTP
+        détecté en alerte de sécurité et la pousse en temps réel sur le flux SSE.
+      tags: [detections]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScanDetectionIn"
+      responses:
+        "201":
+          description: Alerte de scan créée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertOut"
+        "422":
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stream/alerts:
+    get:
+      operationId: stream_alerts
+      summary: Flux temps réel des alertes (Server-Sent Events)
+      description: >
+        Flux SSE (`text/event-stream`). Chaque alerte créée ou mise à jour est
+        émise sous forme `data: {"type": "alert.created" | "alert.updated",
+        "data": AlertOut}`. Des commentaires `: keep-alive` maintiennent la
+        connexion.
+      tags: [stream]
+      responses:
+        "200":
+          description: Flux d'événements SSE
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
 components:
   schemas:
     Criticity:
@@ -203,6 +249,32 @@ components:
     AlertStatus:
       type: string
       enum: [open, triaged, closed]
+
+    ScanType:
+      type: string
+      enum: [port_scan, http_probe, vuln_scan]
+
+    ScanDetectionIn:
+      type: object
+      required: [source_ip]
+      properties:
+        source_ip:
+          type: string
+        scan_type:
+          $ref: "#/components/schemas/ScanType"
+        ports:
+          type: array
+          items:
+            type: integer
+        target:
+          type: string
+          nullable: true
+        packet_count:
+          type: integer
+          nullable: true
+        detail:
+          type: string
+          nullable: true
 
     AlertIn:
       type: object

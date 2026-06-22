@@ -4,7 +4,9 @@ import { CriticityBadge } from "@/shared/ui/Badge";
 import { LoadingSpinner } from "@/shared/ui/LoadingSpinner";
 import { AlertDetail } from "@/features/alerts/components/AlertDetail";
 import { AlertList } from "@/features/alerts/components/AlertList";
+import { LiveScanToast } from "@/features/alerts/components/LiveScanToast";
 import { useOpenAlerts } from "@/features/alerts/hooks/useAlerts";
+import { useAlertStream } from "@/features/alerts/hooks/useAlertStream";
 
 const CRITICITIES: Criticity[] = ["critical", "high", "medium", "low"];
 
@@ -17,7 +19,14 @@ const CRITICITY_LABELS: Record<Criticity, string> = {
 
 export function Dashboard() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [liveScans, setLiveScans] = useState<AlertOut[]>([]);
   const { data: alerts = [], isLoading, error } = useOpenAlerts();
+
+  const { status: streamStatus } = useAlertStream((event) => {
+    if (event.type === "alert.created") {
+      setLiveScans((prev) => [event.data, ...prev].slice(0, 4));
+    }
+  });
 
   const selectedAlert: AlertOut | undefined = alerts.find((a) => a.id === selectedId);
 
@@ -25,14 +34,24 @@ export function Dashboard() {
     setSelectedId((prev) => (prev === id ? null : id));
   }
 
+  function dismissScan(id: string) {
+    setLiveScans((prev) => prev.filter((s) => s.id !== id));
+  }
+
+  const isLive = streamStatus === "open";
+
   return (
     <div className="min-h-screen bg-surface text-white flex flex-col">
       <header className="border-b border-gray-800 px-6 py-4 flex items-center gap-3">
         <span className="text-lg font-bold tracking-tight">ARO</span>
         <span className="text-gray-500 text-sm">· Security Operations Center</span>
         <div className="ml-auto flex items-center gap-2 text-xs text-gray-400">
-          <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
-          En ligne
+          <span
+            className={`w-2 h-2 rounded-full inline-block ${
+              isLive ? "bg-green-500 animate-pulse" : "bg-gray-600"
+            }`}
+          />
+          {isLive ? "Temps réel actif" : "Connexion…"}
         </div>
       </header>
 
@@ -83,6 +102,13 @@ export function Dashboard() {
           )}
         </div>
       </main>
+
+      {/* Toasts temps réel : scans détectés par le capteur */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+        {liveScans.map((scan) => (
+          <LiveScanToast key={scan.id} alert={scan} onDismiss={() => dismissScan(scan.id)} />
+        ))}
+      </div>
     </div>
   );
 }

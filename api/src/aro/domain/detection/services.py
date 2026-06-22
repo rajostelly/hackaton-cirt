@@ -26,6 +26,17 @@ def classify_scan(scan_type: ScanType, port_count: int) -> Criticity:
     return Criticity.LOW
 
 
+# Marqueurs d'agents utilisateurs typiques d'un sondage/scan nmap côté HTTP
+# (scripts NSE http-*, -sV). On reste volontairement centré sur nmap.
+_HTTP_SCANNER_MARKERS = ("nmap", "nmap scripting engine")
+
+
+def is_nmap_http_probe(user_agent: str) -> bool:
+    """Vrai si l'User-Agent trahit une sonde HTTP de type nmap (NSE)."""
+    ua = user_agent.lower()
+    return any(marker in ua for marker in _HTTP_SCANNER_MARKERS)
+
+
 def scan_rule_name(scan_type: ScanType) -> str:
     return {
         ScanType.PORT_SCAN: "Nmap Port Scan Detected",

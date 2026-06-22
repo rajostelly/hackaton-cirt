@@ -1,4 +1,9 @@
-from aro.domain.detection.services import classify_scan, scan_rule_name, scan_title
+from aro.domain.detection.services import (
+    classify_scan,
+    is_nmap_http_probe,
+    scan_rule_name,
+    scan_title,
+)
 from aro.domain.detection.value_objects import ScanType
 from aro.domain.shared.value_objects import Criticity
 
@@ -28,3 +33,15 @@ def test_scan_title_mentions_source_and_count() -> None:
     assert "42" in title
     assert "203.0.113.5" in scan_title(ScanType.HTTP_PROBE, "203.0.113.5", 0)
     assert "203.0.113.5" in scan_title(ScanType.VULN_SCAN, "203.0.113.5", 0)
+
+
+def test_is_nmap_http_probe_detects_nse_user_agent() -> None:
+    assert is_nmap_http_probe(
+        "Mozilla/5.0 (compatible; Nmap Scripting Engine; https://nmap.org/book/nse.html)"
+    )
+    assert is_nmap_http_probe("nmap")
+
+
+def test_is_nmap_http_probe_ignores_normal_user_agent() -> None:
+    assert not is_nmap_http_probe("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120")
+    assert not is_nmap_http_probe("")
