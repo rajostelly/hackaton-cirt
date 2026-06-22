@@ -1,6 +1,12 @@
 from typing import Protocol
 
-from aro.domain.integration.value_objects import ThreatReport, WazuhAgent, WazuhAlert
+from aro.domain.integration.value_objects import (
+    CrowdStrikeDetection,
+    PaloAltoThreat,
+    ThreatReport,
+    WazuhAgent,
+    WazuhAlert,
+)
 
 
 class VirusTotalGateway(Protocol):
@@ -14,3 +20,11 @@ class WazuhIndexerGateway(Protocol):
 
 class WazuhManagerGateway(Protocol):
     def list_agents(self) -> list[WazuhAgent]: ...
+
+
+class PaloAltoGateway(Protocol):
+    def get_recent_threats(self, limit: int) -> list[PaloAltoThreat]: ...
+
+
+class CrowdStrikeGateway(Protocol):
+    def get_recent_detections(self, limit: int) -> list[CrowdStrikeDetection]: ...

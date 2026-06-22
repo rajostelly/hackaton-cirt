@@ -41,3 +41,41 @@ class WazuhAlert:
     source_ip: str | None
     timestamp: str
     full_log: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class PaloAltoThreat:
+    """Entrée de log « threat » d'un firewall PAN-OS (IPS)."""
+
+    id: str
+    threat_name: str
+    severity: str
+    action: str
+    source_ip: str
+    destination_ip: str
+    application: str | None
+    timestamp: str
+
+
+@dataclass(frozen=True, slots=True)
+class CrowdStrikeDetection:
+    """Détection EDR remontée par CrowdStrike Falcon."""
+
+    id: str
+    detection_name: str
+    severity: str
+    tactic: str | None
+    technique: str | None
+    hostname: str
+    status: str
+    timestamp: str
+
+
+@dataclass(frozen=True, slots=True)
+class SocSourceStatus:
+    """État agrégé d'une source de données du SOC (pour le dashboard unique)."""
+
+    source: str
+    online: bool
+    event_count: int
+    detail: str | None = None

@@ -30,3 +30,36 @@ class WazuhAlertOut(BaseModel):
     source_ip: str | None = None
     timestamp: str
     full_log: str | None = None
+
+
+class PaloAltoThreatOut(BaseModel):
+    id: str
+    threat_name: str
+    severity: str
+    action: str
+    source_ip: str
+    destination_ip: str
+    application: str | None = None
+    timestamp: str
+
+
+class CrowdStrikeDetectionOut(BaseModel):
+    id: str
+    detection_name: str
+    severity: str
+    tactic: str | None = None
+    technique: str | None = None
+    hostname: str
+    status: str
+    timestamp: str
+
+
+class SocSourceStatusOut(BaseModel):
+    source: str
+    online: bool
+    event_count: int
+    detail: str | None = None
+
+
+class SocOverviewOut(BaseModel):
+    sources: list[SocSourceStatusOut]
