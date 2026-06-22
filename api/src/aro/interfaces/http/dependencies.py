@@ -10,6 +10,7 @@ from aro.application.alerting.use_cases import (
     ListOpenAlertsUseCase,
     TriageAlertUseCase,
 )
+from aro.application.detection.use_cases import RecordScanDetectionUseCase
 from aro.application.integration.use_cases import (
     EnrichAlertWithVirusTotalUseCase,
     GetCrowdStrikeDetectionsUseCase,
@@ -28,6 +29,8 @@ from aro.domain.integration.ports import (
 )
 from aro.infrastructure.alerting.groq_explainer import GroqExplainer
 from aro.infrastructure.alerting.memory_repo import InMemoryAlertRepository
+from aro.infrastructure.alerting.static_explainer import StaticExplainer
+from aro.infrastructure.realtime.broker import AlertBroker
 from aro.infrastructure.integration.crowdstrike_client import CrowdStrikeClient
 from aro.infrastructure.integration.paloalto_client import PaloAltoClient
 from aro.infrastructure.integration.virustotal_client import VirusTotalClient
@@ -39,17 +42,32 @@ from aro.infrastructure.integration.wazuh_manager_client import WazuhManagerClie
 # ---------------------------------------------------------------------------
 
 _repository: AlertRepository = InMemoryAlertRepository()
+_broker = AlertBroker()
 
 
 def get_repository() -> AlertRepository:
     return _repository
 
 
+def get_broker() -> AlertBroker:
+    return _broker
+
+
 def get_explainer() -> AlertExplainer:
+    api_key = os.environ.get("GROQ_API_KEY", "")
+    if not api_key:
+        # Pas de clé : explainer de repli, sans appel réseau (LSP-compatible).
+        return StaticExplainer()
     return GroqExplainer(
-        api_key=os.environ.get("GROQ_API_KEY", ""),
+        api_key=api_key,
         model=os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile"),
     )
+
+
+def get_record_scan_use_case(
+    repo: AlertRepository = Depends(get_repository),
+) -> RecordScanDetectionUseCase:
+    return RecordScanDetectionUseCase(repository=repo)
 
 
 def get_ingest_use_case(

@@ -1,19 +1,36 @@
+import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from aro.interfaces.http.dependencies import get_broker
 from aro.interfaces.http.errors import register_error_handlers
 from aro.interfaces.http.routers.alerts import router as alerts_router
 from aro.interfaces.http.routers.crowdstrike import router as crowdstrike_router
+from aro.interfaces.http.routers.detections import router as detections_router
 from aro.interfaces.http.routers.enrich import router as enrich_router
 from aro.interfaces.http.routers.paloalto import router as paloalto_router
 from aro.interfaces.http.routers.soc import router as soc_router
+from aro.interfaces.http.routers.stream import router as stream_router
 from aro.interfaces.http.routers.wazuh import router as wazuh_router
 from aro.interfaces.http.schemas.alerts import HealthResponse
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    # Lie le broker temps réel à la boucle asyncio courante pour permettre la
+    # publication d'événements depuis les routes synchrones (threadpool).
+    get_broker().bind_loop(asyncio.get_running_loop())
+    yield
+
 
 app = FastAPI(
     title="ARO API",
     description="Plateforme de supervision de sécurité pilotée par IA",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -26,6 +43,8 @@ app.add_middleware(
 
 register_error_handlers(app)
 app.include_router(alerts_router)
+app.include_router(detections_router)
+app.include_router(stream_router)
 app.include_router(enrich_router)
 app.include_router(wazuh_router)
 app.include_router(paloalto_router)

@@ -9,7 +9,7 @@ from aro.domain.shared.value_objects import AlertId, Criticity, IpAddress
 from aro.application.alerting.dto import AlertOutput, IngestAlertInput, TriageAlertInput
 
 
-def _to_output(alert: Alert) -> AlertOutput:
+def to_output(alert: Alert) -> AlertOutput:
     return AlertOutput(
         id=str(alert.id),
         title=alert.title,
@@ -40,7 +40,7 @@ class IngestAlertUseCase:
         )
         alert.attach_explanation(self.explainer.explain(alert))
         self.repository.add(alert)
-        return _to_output(alert)
+        return to_output(alert)
 
 
 @dataclass
@@ -49,7 +49,7 @@ class ListOpenAlertsUseCase:
 
     def execute(self, limit: int = 50, criticity: Criticity | None = None) -> list[AlertOutput]:
         alerts = self.repository.list_open(limit=limit, criticity=criticity)
-        return [_to_output(a) for a in alerts]
+        return [to_output(a) for a in alerts]
 
 
 @dataclass
@@ -61,7 +61,7 @@ class GetAlertUseCase:
         alert = self.repository.get_by_id(aid)
         if alert is None:
             raise AlertNotFound(alert_id)
-        return _to_output(alert)
+        return to_output(alert)
 
 
 @dataclass
@@ -75,4 +75,4 @@ class TriageAlertUseCase:
             raise AlertNotFound(data.alert_id)
         alert.triage(data.is_false_positive)
         self.repository.update(alert)
-        return _to_output(alert)
+        return to_output(alert)
