@@ -12,17 +12,24 @@ from aro.application.alerting.use_cases import (
 )
 from aro.application.integration.use_cases import (
     EnrichAlertWithVirusTotalUseCase,
+    GetCrowdStrikeDetectionsUseCase,
+    GetPaloAltoThreatsUseCase,
+    GetSocOverviewUseCase,
     GetWazuhAlertsUseCase,
     ListWazuhAgentsUseCase,
 )
 from aro.domain.alerting.ports import AlertExplainer, AlertRepository
 from aro.domain.integration.ports import (
+    CrowdStrikeGateway,
+    PaloAltoGateway,
     VirusTotalGateway,
     WazuhIndexerGateway,
     WazuhManagerGateway,
 )
 from aro.infrastructure.alerting.groq_explainer import GroqExplainer
 from aro.infrastructure.alerting.memory_repo import InMemoryAlertRepository
+from aro.infrastructure.integration.crowdstrike_client import CrowdStrikeClient
+from aro.infrastructure.integration.paloalto_client import PaloAltoClient
 from aro.infrastructure.integration.virustotal_client import VirusTotalClient
 from aro.infrastructure.integration.wazuh_indexer_client import WazuhIndexerClient
 from aro.infrastructure.integration.wazuh_manager_client import WazuhManagerClient
@@ -97,6 +104,23 @@ def get_wazuh_manager_gateway() -> WazuhManagerGateway:
     )
 
 
+def get_paloalto_gateway() -> PaloAltoGateway:
+    return PaloAltoClient(
+        base_url=os.environ.get("PANOS_BASE_URL", ""),
+        api_key=os.environ.get("PANOS_API_KEY", ""),
+        verify_ssl=os.environ.get("PANOS_VERIFY_SSL", "false").lower() == "true",
+    )
+
+
+def get_crowdstrike_gateway() -> CrowdStrikeGateway:
+    return CrowdStrikeClient(
+        base_url=os.environ.get("CROWDSTRIKE_BASE_URL", "https://api.crowdstrike.com"),
+        client_id=os.environ.get("CROWDSTRIKE_CLIENT_ID", ""),
+        client_secret=os.environ.get("CROWDSTRIKE_CLIENT_SECRET", ""),
+        verify_ssl=os.environ.get("CROWDSTRIKE_VERIFY_SSL", "true").lower() == "true",
+    )
+
+
 # ---------------------------------------------------------------------------
 # Integration use cases
 # ---------------------------------------------------------------------------
@@ -118,3 +142,25 @@ def get_wazuh_alerts_use_case(
     indexer: WazuhIndexerGateway = Depends(get_wazuh_indexer_gateway),
 ) -> GetWazuhAlertsUseCase:
     return GetWazuhAlertsUseCase(wazuh_indexer=indexer)
+
+
+def get_paloalto_threats_use_case(
+    paloalto: PaloAltoGateway = Depends(get_paloalto_gateway),
+) -> GetPaloAltoThreatsUseCase:
+    return GetPaloAltoThreatsUseCase(paloalto=paloalto)
+
+
+def get_crowdstrike_detections_use_case(
+    crowdstrike: CrowdStrikeGateway = Depends(get_crowdstrike_gateway),
+) -> GetCrowdStrikeDetectionsUseCase:
+    return GetCrowdStrikeDetectionsUseCase(crowdstrike=crowdstrike)
+
+
+def get_soc_overview_use_case(
+    indexer: WazuhIndexerGateway = Depends(get_wazuh_indexer_gateway),
+    paloalto: PaloAltoGateway = Depends(get_paloalto_gateway),
+    crowdstrike: CrowdStrikeGateway = Depends(get_crowdstrike_gateway),
+) -> GetSocOverviewUseCase:
+    return GetSocOverviewUseCase(
+        wazuh_indexer=indexer, paloalto=paloalto, crowdstrike=crowdstrike
+    )
