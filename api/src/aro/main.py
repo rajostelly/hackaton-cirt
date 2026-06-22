@@ -1,4 +1,5 @@
 import asyncio
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -43,9 +44,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Origines autorisées configurables (front local + serveur). CORS_ORIGINS =
+# liste séparée par des virgules.
+_default_origins = "http://localhost:5173,http://localhost:4173"
+_cors_origins = [
+    o.strip()
+    for o in os.environ.get("CORS_ORIGINS", _default_origins).split(",")
+    if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

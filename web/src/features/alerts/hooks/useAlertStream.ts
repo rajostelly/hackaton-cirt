@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { API_BASE } from "@/api/config";
 import type { AlertOut } from "@/api/types";
 
 export type StreamStatus = "connecting" | "open" | "error";
@@ -21,7 +22,7 @@ export function useAlertStream(onEvent?: (event: AlertStreamEvent) => void) {
   });
 
   useEffect(() => {
-    const source = new EventSource("/api/stream/alerts");
+    const source = new EventSource(`${API_BASE}/stream/alerts`);
 
     source.onopen = () => setStatus("open");
     source.onerror = () => setStatus("error");

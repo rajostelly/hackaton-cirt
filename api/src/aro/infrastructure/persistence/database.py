@@ -19,12 +19,18 @@ def _normalize_url(url: str) -> str:
 
 
 def init_db(database_url: str) -> sessionmaker[Session]:
-    """Crée l'engine + les tables (idempotent) et renvoie la session factory."""
+    """Initialise l'engine + la session factory et renvoie celle-ci.
+
+    SQLite (dev/tests) : tables créées directement (idempotent). Postgres
+    (prod) : schéma géré par les migrations Alembic — on ne crée rien ici afin
+    que les migrations restent l'unique source de vérité.
+    """
     global _engine, _session_factory
     if _engine is None:
         _engine = create_engine(_normalize_url(database_url), pool_pre_ping=True)
         _session_factory = sessionmaker(bind=_engine, expire_on_commit=False)
-    Base.metadata.create_all(_engine)
+    if _engine.dialect.name == "sqlite":
+        Base.metadata.create_all(_engine)
     assert _session_factory is not None
     return _session_factory
 
