@@ -14,6 +14,7 @@ except ImportError:
     pass
 
 from aro.infrastructure.alerting.sqlalchemy_models import Base
+from aro.infrastructure.persistence import models  # noqa: F401 - enregistre les tables
 from aro.infrastructure.persistence.database import _normalize_url
 
 config = context.config

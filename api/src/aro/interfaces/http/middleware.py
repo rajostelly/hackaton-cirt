@@ -13,7 +13,12 @@ from aro.application.detection.use_cases import RecordScanDetectionUseCase
 from aro.domain.detection.services import is_nmap_http_probe
 from aro.domain.detection.value_objects import ScanType
 from aro.interfaces.http import mappers
-from aro.interfaces.http.dependencies import get_broker, get_explainer, get_repository
+from aro.interfaces.http.dependencies import (
+    auto_block,
+    get_broker,
+    get_explainer,
+    get_repository,
+)
 from aro.interfaces.http.routers.detections import enrich_with_ai
 
 
@@ -70,4 +75,5 @@ class NmapHttpProbeMiddleware(BaseHTTPMiddleware):
         except ValueError:
             return  # IP non IPv4 (ex. IPv6 / hôte inconnu) — on ignore
         broker.publish("alert.created", mappers.to_alert_out(result).model_dump(mode="json"))
+        auto_block(result.source_ip)  # blocage pare-feu automatique si mode IPS
         enrich_with_ai(result.id, repo, get_explainer(), broker)

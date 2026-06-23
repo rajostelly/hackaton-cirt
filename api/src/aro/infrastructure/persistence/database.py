@@ -26,6 +26,9 @@ def init_db(database_url: str) -> sessionmaker[Session]:
     que les migrations restent l'unique source de vérité.
     """
     global _engine, _session_factory
+    # Enregistre tous les modèles dans Base.metadata (alerts, incidents, ml_reports).
+    from aro.infrastructure.persistence import models  # noqa: F401
+
     if _engine is None:
         _engine = create_engine(_normalize_url(database_url), pool_pre_ping=True)
         _session_factory = sessionmaker(bind=_engine, expire_on_commit=False)

@@ -13,6 +13,7 @@ from aro.infrastructure.alerting.static_explainer import DEFAULT_EXPLANATION
 from aro.infrastructure.realtime.broker import AlertBroker
 from aro.interfaces.http import mappers
 from aro.interfaces.http.dependencies import (
+    auto_block,
     get_broker,
     get_explainer,
     get_record_scan_use_case,
@@ -73,5 +74,6 @@ def report_scan(
     result = use_case.execute(_to_input(payload))
     out = mappers.to_alert_out(result)
     broker.publish("alert.created", out.model_dump(mode="json"))
+    auto_block(out.source_ip)  # blocage pare-feu automatique si mode IPS
     background.add_task(enrich_with_ai, result.id, repo, explainer, broker)
     return out
